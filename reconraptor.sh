@@ -104,9 +104,10 @@ filter_live_hosts() {
 # Function to run port scanning
 run_port_scan() {
     printf "[+] Port Scanning\n"
-    if ! naabu -list "$RESULTS_DIR/live.txt" -top-ports 1000 -o "$RESULTS_DIR/naabu-results.txt"; then
-        printf "Port scanning failed.\n" >&2
-        return 1
+    if [[ -n "$SINGLE_SUBDOMAIN" ]]; then
+        naabu -host $SINGLE_SUBDOMAIN -top-ports 1000 -o "$RESULTS_DIR/naabu-results.txt"
+    else
+        aabu -list "$RESULTS_DIR/subs.txt" -top-ports 1000 -o "$RESULTS_DIR/naabu-results.txt"
     fi
 }
 
