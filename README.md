@@ -1,123 +1,101 @@
-## Overview
+# ReconRaptor
 
-This tool is designed to automate various web security testing tasks such as subdomain enumeration, URL fetching, subdomain takeover scanning, JS exposure scanning, live host filtering, port scanning, nuclei scans, reflection scanning, GF pattern scans, Dalfox scans, fuzzing, and SQL injection scanning. It uses various popular security tools and organizes the results into a structured directory.
-
-## Requirements
-
-Before running this script, ensure that the following tools are installed on your system:
-
-- `subfinder`
-- `httpx`
-- `gau`
-- `subov88r`
-- `nuclei`
-- `naabu`
-- `kxss`
-- `qsreplace`
-- `gf`
-- `dalfox`
-- `ffuf`
-- `interlace`
-- `urldedupe`
-- `sqlmap`
-
-Additionally, ensure the following directories are available or clone the respective repositories:
-
-- `nuclei_templates` from [h0tak88r/nuclei_templates](https://github.com/h0tak88r/nuclei_templates.git)
-- `nuclei-templates` from [projectdiscovery/nuclei-templates](https://github.com/projectdiscovery/nuclei-templates.git)
-- `Wordlists` from [h0tak88r/Wordlists](https://github.com/h0tak88r/Wordlists.git)
-- `~/.gf` for GF patterns from [1ndianl33t/Gf-Patterns](https://github.com/1ndianl33t/Gf-Patterns.git)
-
-## Usage
-
-```bash
-./reconraptor.sh <target_domain|subdomain_list> [-s single_subdomain]
-```
-
-### Arguments
-
-- `target_domain|subdomain_list`: The target domain or a file containing a list of subdomains to scan.
-- `-s single_subdomain`: (Optional) Specify a single subdomain to focus the scan on.
+ReconRaptor is an automated reconnaissance tool designed for security assessments. It performs various tasks such as subdomain enumeration, URL fetching, subdomain takeover scanning, JS exposure scanning, live host filtering, port scanning, exposed panels scanning, nuclei scans, reflection scanning, fuzzing, and SQL injection scanning.
 
 ## Features
 
-1. **Subdomain Enumeration**
-    - Uses `subfinder` to find subdomains of the target domain.
+- Subdomain Enumeration
+- URL Fetching
+- Subdomain Takeover Scanning
+- JS Exposures Scanning
+- Live Hosts Filtering
+- Port Scanning
+- Exposed Panels Scanning
+- Nuclei Scanning
+- Reflection Scanning
+- GF Patterns Scanning
+- Dalfox Scanning
+- Fuzzing with ffuf
+- SQL Injection Scanning with sqlmap
 
-2. **URL Fetching**
-    - Uses `gau` to fetch URLs associated with the target domain or subdomains.
+## Prerequisites
 
-3. **Subdomain Takeover Scanning**
-    - Uses `subov88r` and `nuclei` to check for potential subdomain takeovers.
+Make sure you have the following tools installed:
 
-4. **JS Exposure Scanning**
-    - Identifies and analyzes exposed JavaScript files.
+- subfinder
+- httpx
+- waymore
+- subov88r
+- nuclei
+- naabu
+- kxss
+- qsreplace
+- gf
+- dalfox
+- ffuf
+- interlace
+- urldedupe
 
-5. **Live Host Filtering**
-    - Uses `httpx` to filter live hosts.
+## Installation
 
-6. **Port Scanning**
-    - Uses `naabu` for port scanning on live hosts.
-
-7. **Exposed Panels Scanning**
-    - Uses `nuclei` to identify exposed administrative panels.
-
-8. **Nuclei Scanning**
-    - Runs `nuclei` scans using various templates.
-
-9. **Reflection Scanning**
-    - Uses `kxss` to find reflected XSS vulnerabilities.
-
-10. **GF Pattern Scans**
-    - Uses `gf` to search for specific vulnerability patterns in URLs.
-
-11. **Dalfox Scanning**
-    - Uses `dalfox` to scan for XSS vulnerabilities.
-
-12. **Fuzzing with ffuf**
-    - Uses `ffuf` to fuzz endpoints for potential vulnerabilities.
-
-13. **SQL Injection Scanning**
-    - Uses `sqlmap` to scan for SQL injection vulnerabilities.
-
-## Setup
-
-### Clone Necessary Repositories
-
-Ensure the necessary repositories are cloned:
+Clone the required repositories:
 
 ```bash
 git clone https://github.com/h0tak88r/nuclei_templates.git
 git clone https://github.com/projectdiscovery/nuclei-templates.git
 git clone https://github.com/h0tak88r/Wordlists.git
-git clone https://github.com/1ndianl33t/Gf-Patterns.git
+```
+
+If you don't have GF Patterns installed, follow these steps:
+
+```bash
+git clone https://github.com/1ndianl33t/Gf-Patterns
 mkdir -p ~/.gf
 cp Gf-Patterns/*.json ~/.gf
 echo 'source $GOPATH/src/github.com/tomnomnom/gf/gf-completion.bash' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-### Install Required Tools
+## Usage
 
-Install the required tools using your preferred package manager or by following their respective installation guides.
-
-## Running the Script
-
-To run the script, provide a target domain or a file containing a list of subdomains. Optionally, you can specify a single subdomain with the `-s` flag.
-
-Example:
+To run ReconRaptor, use the following command:
 
 ```bash
-./reconraptor.sh example.com
-./reconraptor.sh subdomains.txt -s sub.example.com
+./reconraptor.sh <target_domain> [-s single_subdomain]
 ```
 
-The script will create a `results` directory where all the output files will be stored.
+- `<target_domain>`: The target domain for reconnaissance.
+- `-s single_subdomain`: (Optional) Specify a single subdomain to work with.
 
-## Output
+## Functions Overview
 
-The script organizes the results in the `results` directory with files for subdomains, URLs, live hosts, port scans, exposed panels, nuclei scan results, reflection scan results, GF pattern results, Dalfox scan results, fuzzing results, and SQL injection scan results.
+- `log`: Logs messages to both the console and a log file.
+- `check_and_clone`: Checks and clones repositories if they do not exist.
+- `check_tools`: Checks if required tools are installed.
+- `setup_results_dir`: Sets up the results directory.
+- `run_subfinder`: Runs subdomain enumeration.
+- `fetch_urls`: Fetches URLs using waymore.
+- `subdomain_takeover_scan`: Scans for subdomain takeover vulnerabilities.
+- `scan_js_exposures`: Scans for JS exposures using nuclei.
+- `filter_live_hosts`: Filters live hosts using httpx.
+- `run_port_scan`: Runs port scanning using naabu.
+- `scan_exposed_panels`: Scans for exposed panels using nuclei.
+- `run_nuclei_scans`: Runs nuclei scans.
+- `run_reflection_scan`: Runs reflection scanning using kxss.
+- `run_gf_scans`: Runs GF pattern scans.
+- `run_dalfox_scan`: Runs Dalfox scans.
+- `run_ffuf`: Runs fuzzing with ffuf.
+- `make_ffuf_results_unique`: Makes ffuf results unique.
+- `run_sql_injection_scan`: Runs SQL injection scanning with sqlmap.
 
-## Conclusion
+## Logs
 
-This tool automates the process of web security testing by integrating several popular security tools. Ensure all required tools are installed and repositories are cloned before running the script. Adjust the script and tools as necessary to fit your specific needs.
+Logs are stored in `reconraptor.log`.
+
+## Results
+
+Results are stored in the `results` directory, created in the current working directory.
+
+## License
+
+This project is licensed under the MIT License.
