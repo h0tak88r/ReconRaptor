@@ -55,7 +55,14 @@ cp Gf-Patterns/*.json ~/.gf
 echo 'source $GOPATH/src/github.com/tomnomnom/gf/gf-completion.bash' >> ~/.bashrc
 source ~/.bashrc
 ```
+## Automatic Setup using setup.sh
 
+### Instructions:
+1. **Download the script**: Save the script into a file named `setup.sh`.
+2. **Make it executable**: Run `chmod +x setup.sh` to make the script executable.
+3. **Run the script**: Execute `./setup.sh` to install all the required tools and dependencies.
+
+This script automates the installation of various tools like subfinder, httpx, gau, subov88r, nuclei, naabu, kxss, qsreplace, gf, dalfox, ffuf, interlace, and ghauri. It also sets up urldedupe, massdns, nuclei templates, and aquatone as required for reconnaissance tasks.
 ## Usage
 
 To run ReconRaptor, use the following command:
