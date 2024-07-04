@@ -69,13 +69,41 @@ setup_results_dir() {
     mkdir -p "$RESULTS_DIR"
 }
 
+# Function to check enabled PUT Method
+put_scan(){
+    for host in $(cat "$RESULTS_DIR/live.txt")
+    do
+     curl -s -o /dev/null -w "URL: %{url_effective} - Response: %{response_code}\n" -X PUT -d "hello world"  "${host}/evil.txt"
+    done
+}
+
+
+
 # Function to run subdomain enumeration
-run_subfinder() {
-    log "[+] Subdomain Enumeration using SubFinder"
-    if ! subfinder -d "$TARGET" --all -silent -o "$RESULTS_DIR/subs.txt"; then
-        log "SubFinder failed."
-        return 1
-    fi
+subEnum() {
+    log "[+] Subdomain Enumeration using SubFinder and free API Sources"
+    #--------------------------------------------------------------------------------------------------------------------
+    curl --silent "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" > tmp.txt
+    curl --silent "https://api.hackertarget.com/hostsearch/?q=$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://crt.sh/?q=%.$1" | grep -oP "\<TD\>\K.*\.$1" | sed -e 's/\<BR\>/\n/g' | grep -oP "\K.*\.$1" | sed -e 's/[\<|\>]//g' | grep -o -E "[a-zA-Z0-9._-]+\.$1"  >> tmp.txt
+    curl --silent "https://crt.sh/?q=%.%.$1" | grep -oP "\<TD\>\K.*\.$1" | sed -e 's/\<BR\>/\n/g' | sed -e 's/[\<|\>]//g' | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://crt.sh/?q=%.%.%.$1" | grep "$1" | cut -d '>' -f2 | cut -d '<' -f1 | grep -v " " | grep -o -E "[a-zA-Z0-9._-]+\.$1" | sort -u >> tmp.txt
+    curl --silent "https://crt.sh/?q=%.%.%.%.$1" | grep "$1" | cut -d '>' -f2 | cut -d '<' -f1 | grep -v " " | grep -o -E "[a-zA-Z0-9._-]+\.$1" |  sort -u >> tmp.txt
+    curl --silent "https://certspotter.com/api/v0/certs?domain=$1" | grep  -o '\[\".*\"\]' | sed -e 's/\[//g' | sed -e 's/\"//g' | sed -e 's/\]//g' | sed -e 's/\,/\n/g' | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://spyse.2com/target/domain/$1" | grep -E -o "button.*>.*\.$1\/button>" |  grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://tls.bufferover.run/dns?q=$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://dns.bufferover.run/dns?q=.$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://urlscan.io/api/v1/search/?q=$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent -X POST "https://synapsint.com/report.php" -d "name=http%3A%2F%2F$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://jldc.me/anubis/subdomains/$1" | grep -Po "((http|https):\/\/)?(([\w.-]*)\.([\w]*)\.([A-z]))\w+" >> tmp.txt
+    curl --silent "https://sonar.omnisint.io/subdomains/$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://otx.alienvault.com/api/v1/indicators/domain/$1/passive_dns" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl --silent "https://riddler.io/search/exportcsv?q=pld:$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    #--------------------------------------------------------------------------------------------------------------------
+    cat tmp.txt | sed -e "s/\*\.$1//g" | sed -e "s/^\..*//g" | grep -o -E "[a-zA-Z0-9._-]+\.$1" | sort -u > "$RESULTS_DIR/apis-subs.txt"
+    rm  tmp.txt 
+    subfinder -d "$TARGET" --all -silent -o "$RESULTS_DIR/subfinder-subs.txt"
+    cat "$RESULTS_DIR/subfinder-subs.txt" "$RESULTS_DIR/apis-subs.txt" | sort -u |uniq -u| grep -v "*" |sort -u > "$RESULTS_DIR/subs.txt"  
 }
 
 # Function to fetch URLs
@@ -126,6 +154,7 @@ run_port_scan() {
 scan_exposed_panels() {
     log "[+] Exposed Panels Scanning"
     cat "$RESULTS_DIR/live.txt" | nuclei -t nuclei_templates/panels | tee "$RESULTS_DIR/exposed-panels.txt"
+    cat "$RESULTS_DIR/urls.txt" | nuclei -t nuclei_templates/panels | tee "$RESULTS_DIR/exposed-panels.txt"
 }
 
 # Function to run nuclei scans
@@ -158,10 +187,7 @@ run_gf_scans() {
 # Function to run Dalfox scans
 run_dalfox_scan() {
     log "[+] Dalfox Scanning"
-    if ! dalfox file "$RESULTS_DIR/kxss-results.txt" --no-spinner --only-poc r --ignore-return 302,404,403 --skip-bav -b "XSS Server here" -w 50 -o "$RESULTS_DIR/dalfox-results.txt"; then
-        log "Dalfox scanning failed."
-        return 1
-    fi
+    dalfox file "$RESULTS_DIR/gf-xss.txt" --no-spinner --only-poc r --ignore-return 302,404,403 --skip-bav -b "XSS Server here" -w 50 -o "$RESULTS_DIR/dalfox-results.txt"
 }
 
 # Function to run fuzzing with ffuf
@@ -224,6 +250,7 @@ main() {
         fetch_urls
         scan_js_exposures
         filter_live_hosts
+        put_scan
         run_port_scan
         scan_exposed_panels
         run_nuclei_scans
@@ -235,11 +262,12 @@ main() {
         run_sql_injection_scan
     else
         log "[+] Working with domain: $TARGET"
-        run_subfinder
+        subEnum
         fetch_urls
         subdomain_takeover_scan
         scan_js_exposures
         filter_live_hosts
+        put_scan
         run_port_scan
         scan_exposed_panels
         run_nuclei_scans
