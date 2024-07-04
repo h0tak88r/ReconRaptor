@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # ReconRaptor Logo
-echo "=============================="
-echo "  
+printf "==============================\n"
+printf "  
 ┳┓       ┳┓         
 ┣┫┏┓┏┏┓┏┓┣┫┏┓┏┓╋┏┓┏┓
 ┛┗┗ ┗┗┛┛┗┛┗┗┻┣┛┗┗┛┛ 
              ┛      
-=============================="
+==============================\n"
 
 # Check if TARGET is provided
 if [[ -z "$1" ]]; then
@@ -34,8 +34,8 @@ done
 # Function to log messages
 log() {
     local message="$1"
-    echo "$message"
-    echo "$message" >> "$LOG_FILE"
+    printf "%s\n" "$message"
+    printf "%s\n" "$message" >> "$LOG_FILE"
 }
 
 # Function to check and clone repositories if they do not exist
@@ -70,40 +70,32 @@ setup_results_dir() {
 }
 
 # Function to check enabled PUT Method
-put_scan(){
-    for host in $(cat "$RESULTS_DIR/live.txt")
-    do
-     curl -s -o /dev/null -w "URL: %{url_effective} - Response: %{response_code}\n" -X PUT -d "hello world"  "${host}/evil.txt"
-    done
+put_scan() {
+    while IFS= read -r host; do
+        curl -s -o /dev/null -w "URL: %{url_effective} - Response: %{response_code}\n" -X PUT -d "hello world" "${host}/evil.txt"
+    done < "$RESULTS_DIR/live.txt"
 }
 
-
-
-# Function to run subdomain enumeration
+# Function to run subdomain enumeration  curl 'https://tls.bufferover.run/dns?q=.google.com' -H 'x-api-key: lx6FXQo1sd54gAIBWnwlWa8WR4rgzCyR87LBlV6l'
 subEnum() {
     log "[+] Subdomain Enumeration using SubFinder and free API Sources"
     #--------------------------------------------------------------------------------------------------------------------
-    curl --silent "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" > tmp.txt
     curl --silent "https://api.hackertarget.com/hostsearch/?q=$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
     curl --silent "https://crt.sh/?q=%.$1" | grep -oP "\<TD\>\K.*\.$1" | sed -e 's/\<BR\>/\n/g' | grep -oP "\K.*\.$1" | sed -e 's/[\<|\>]//g' | grep -o -E "[a-zA-Z0-9._-]+\.$1"  >> tmp.txt
     curl --silent "https://crt.sh/?q=%.%.$1" | grep -oP "\<TD\>\K.*\.$1" | sed -e 's/\<BR\>/\n/g' | sed -e 's/[\<|\>]//g' | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
     curl --silent "https://crt.sh/?q=%.%.%.$1" | grep "$1" | cut -d '>' -f2 | cut -d '<' -f1 | grep -v " " | grep -o -E "[a-zA-Z0-9._-]+\.$1" | sort -u >> tmp.txt
     curl --silent "https://crt.sh/?q=%.%.%.%.$1" | grep "$1" | cut -d '>' -f2 | cut -d '<' -f1 | grep -v " " | grep -o -E "[a-zA-Z0-9._-]+\.$1" |  sort -u >> tmp.txt
-    curl --silent "https://certspotter.com/api/v0/certs?domain=$1" | grep  -o '\[\".*\"\]' | sed -e 's/\[//g' | sed -e 's/\"//g' | sed -e 's/\]//g' | sed -e 's/\,/\n/g' | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
     curl --silent "https://spyse.2com/target/domain/$1" | grep -E -o "button.*>.*\.$1\/button>" |  grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
-    curl --silent "https://tls.bufferover.run/dns?q=$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
-    curl --silent "https://dns.bufferover.run/dns?q=.$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
+    curl 'https://tls.bufferover.run/dns?q=.google.com' -H 'x-api-key: lx6FXQo1sd54gAIBWnwlWa8WR4rgzCyR87LBlV6l' -X POST | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
     curl --silent "https://urlscan.io/api/v1/search/?q=$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
     curl --silent -X POST "https://synapsint.com/report.php" -d "name=http%3A%2F%2F$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
     curl --silent "https://jldc.me/anubis/subdomains/$1" | grep -Po "((http|https):\/\/)?(([\w.-]*)\.([\w]*)\.([A-z]))\w+" >> tmp.txt
-    curl --silent "https://sonar.omnisint.io/subdomains/$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
     curl --silent "https://otx.alienvault.com/api/v1/indicators/domain/$1/passive_dns" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
-    curl --silent "https://riddler.io/search/exportcsv?q=pld:$1" | grep -o -E "[a-zA-Z0-9._-]+\.$1" >> tmp.txt
     #--------------------------------------------------------------------------------------------------------------------
-    cat tmp.txt | sed -e "s/\*\.$1//g" | sed -e "s/^\..*//g" | grep -o -E "[a-zA-Z0-9._-]+\.$1" | sort -u > "$RESULTS_DIR/apis-subs.txt"
-    rm  tmp.txt 
+    sed -e "s/\*\.$1//g" -e "s/^\..*//g" tmp.txt | grep -o -E "[a-zA-Z0-9._-]+\.$1" | sort -u > "$RESULTS_DIR/apis-subs.txt"
+    rm tmp.txt 
     subfinder -d "$TARGET" --all -silent -o "$RESULTS_DIR/subfinder-subs.txt"
-    cat "$RESULTS_DIR/subfinder-subs.txt" "$RESULTS_DIR/apis-subs.txt" | sort -u |uniq -u| grep -v "*" |sort -u > "$RESULTS_DIR/subs.txt"  
+    sort -u "$RESULTS_DIR/subfinder-subs.txt" "$RESULTS_DIR/apis-subs.txt" | grep -v "*" | sort -u > "$RESULTS_DIR/subs.txt"
 }
 
 # Function to fetch URLs
@@ -127,16 +119,18 @@ subdomain_takeover_scan() {
 # Function to scan for JS exposures
 scan_js_exposures() {
     log "[+] JS Exposures"
-    grep ".js" "$RESULTS_DIR/urls.txt" | nuclei -l - -t nuclei_templates/js/ | tee "$RESULTS_DIR/js-exposures.txt"
+    grep ".js" "$RESULTS_DIR/urls.txt" | nuclei -l - -t nuclei_templates/js/ | tee "$
+
+RESULTS_DIR/js-exposures.txt"
 }
 
 # Function to filter live hosts
 filter_live_hosts() {
     log "[+] Filtering Live hosts"
     if [[ -n "$SINGLE_SUBDOMAIN" ]]; then
-        echo "$SINGLE_SUBDOMAIN" | httpx --silent | awk '{print $1}' > "$RESULTS_DIR/live.txt"
+        printf "%s\n" "$SINGLE_SUBDOMAIN" | httpx --silent | awk '{print $1}' > "$RESULTS_DIR/live.txt"
     else
-        cat "$RESULTS_DIR/subs.txt" | httpx --silent | awk '{print $1}' > "$RESULTS_DIR/live.txt"
+        httpx --silent -l "$RESULTS_DIR/subs.txt" | awk '{print $1}' > "$RESULTS_DIR/live.txt"
     fi
 }
 
@@ -144,7 +138,7 @@ filter_live_hosts() {
 run_port_scan() {
     log "[+] Port Scanning"
     if [[ -n "$SINGLE_SUBDOMAIN" ]]; then
-        naabu -host $SINGLE_SUBDOMAIN -top-ports 1000 -o "$RESULTS_DIR/naabu-results.txt"
+        naabu -host "$SINGLE_SUBDOMAIN" -top-ports 1000 -o "$RESULTS_DIR/naabu-results.txt"
     else
         naabu -list "$RESULTS_DIR/subs.txt" -top-ports 1000 -o "$RESULTS_DIR/naabu-results.txt"
     fi
@@ -153,8 +147,8 @@ run_port_scan() {
 # Function to scan for exposed panels
 scan_exposed_panels() {
     log "[+] Exposed Panels Scanning"
-    cat "$RESULTS_DIR/live.txt" | nuclei -t nuclei_templates/panels | tee "$RESULTS_DIR/exposed-panels.txt"
-    cat "$RESULTS_DIR/urls.txt" | nuclei -t nuclei_templates/panels | tee "$RESULTS_DIR/exposed-panels.txt"
+    nuclei -t nuclei_templates/panels -l "$RESULTS_DIR/live.txt" | tee "$RESULTS_DIR/exposed-panels.txt"
+    nuclei -t nuclei_templates/panels -l "$RESULTS_DIR/urls.txt" | tee "$RESULTS_DIR/exposed-panels.txt"
 }
 
 # Function to run nuclei scans
@@ -172,7 +166,7 @@ run_nuclei_scans() {
 # Function to run reflection scanning
 run_reflection_scan() {
     log "[+] Reflection Scanning"
-    cat "$RESULTS_DIR/urls.txt" | kxss | tee "$RESULTS_DIR/kxss-results.txt"
+    kxss < "$RESULTS_DIR/urls.txt" | tee "$RESULTS_DIR/kxss-results.txt"
 }
 
 # Function to run GF pattern scans
@@ -180,7 +174,7 @@ run_gf_scans() {
     log "[+] GF Patterns"
     local gf_patterns=("xss" "ssrf" "ssti" "redirect" "lfi" "sqli")
     for pattern in "${gf_patterns[@]}"; do
-        cat "$RESULTS_DIR/urls.txt" | urldedupe | gf "$pattern" | qsreplace FUZZ > "$RESULTS_DIR/gf-$pattern.txt"
+        urldedupe < "$RESULTS_DIR/urls.txt" | gf "$pattern" | qsreplace FUZZ > "$RESULTS_DIR/gf-$pattern.txt"
     done
 }
 
@@ -210,9 +204,9 @@ make_ffuf_results_unique() {
     declare -A seen_sizes
     for file in "$RESULTS_DIR/ffufGet.txt" "$RESULTS_DIR/ffufPost.txt"; do
         while IFS= read -r line; do
-            size=$(echo "$line" | grep -oP 'Words: \K\d+')
+            size=$(printf "%s\n" "$line" | grep -oP 'Words: \K\d+')
             if [[ -n "$size" && -z "${seen_sizes[$size]}" ]]; then
-                echo "$line" >> "${file%.txt}-unique.txt"
+                printf "%s\n" "$line" >> "${file%.txt}-unique.txt"
                 seen_sizes[$size]=1
             fi
         done < "$file"
