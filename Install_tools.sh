@@ -123,7 +123,7 @@ else
 fi
 
 
-if [ ! -d "Interlace" ]; then
+if ! command_exists interlace ; then
     echo -e "${YELLOW}Installing interlace...${NC}"
     git clone https://github.com/codingo/Interlace.git
     if [ $? -ne 0 ]; then
@@ -152,7 +152,7 @@ fi
 
 # installing urldedupe
 
-if [ ! -d "urldedupe" ]; then
+if ! command_exists urldedupe ; then
     echo -e "${YELLOW}Installing urldedupe...${NC}"
     git clone https://github.com/ameenmaali/urldedupe.git
     cd urldedupe || { echo "Failed to enter directory urldedupe"; exit 1; }
