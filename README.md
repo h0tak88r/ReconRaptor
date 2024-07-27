@@ -34,17 +34,19 @@ Make sure you have the following tools installed:
 - interlace
 - urldedupe
 
-### Clone the repository
+## Setup 
+```sh
+bash setup.sh
+```
+
+## Clone the repository
 ```sh
 git clone https://github.com/h0tak88r/ReconRaptor.git
 cd ReconRaptor
 ```
 
-### Download required repositories
+### Setup GF Patterns
 ```sh
-git clone https://github.com/h0tak88r/nuclei_templates.git
-git clone https://github.com/projectdiscovery/nuclei-templates.git
-git clone https://github.com/h0tak88r/Wordlists.git
 git clone https://github.com/1ndianl33t/Gf-Patterns
 mkdir -p ~/.gf
 cp Gf-Patterns/*.json ~/.gf
