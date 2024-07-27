@@ -1,96 +1,134 @@
 #!/bin/bash
 
-# Function to install Go tools
-install_go_tools() {
-    go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-    go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-    go install -v github.com/projectdiscovery/notify/cmd/notify@latest
-    go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
-    go install github.com/d3mondev/puredns/v2@latest
-    go install github.com/glebarez/cero@latest
-    go install github.com/Emoe/kxss@latest
-    go install github.com/lc/gau/v2/cmd/gau@latest
-    go install github.com/ffuf/ffuf/v2@latest
+# Function to print messages in color
+print_msg() {
+    local color="$1"
+    local msg="$2"
+    case "$color" in
+        red) printf "\e[31m%s\e[0m\n" "$msg" ;;
+        green) printf "\e[32m%s\e[0m\n" "$msg" ;;
+        yellow) printf "\e[33m%s\e[0m\n" "$msg" ;;
+        blue) printf "\e[34m%s\e[0m\n" "$msg" ;;
+        *) printf "%s\n" "$msg" ;;
+    esac
+}
+
+# Function to install a Go tool
+install_go_tool() {
+    local tool="$1"
+    local install_cmd="$2"
+    if ! command -v "$tool" &> /dev/null; then
+        print_msg red "$tool - not installed"
+        print_msg yellow "Attempting to install $tool"
+        eval "$install_cmd"
+    else
+        print_msg green "$tool - installed"
+    fi
 }
 
 # Function to install urldedupe
 install_urldedupe() {
-    git clone https://github.com/ameenmaali/urldedupe.git
-    cd urldedupe
-    cmake CMakeLists.txt
-    make
-    sudo mv urldedupe /bin/
-    cd ..
+    if ! command -v urldedupe &> /dev/null; then
+        print_msg red "urldedupe - not installed"
+        print_msg yellow "Attempting to install urldedupe"
+        git clone https://github.com/ameenmaali/urldedupe.git
+        cd urldedupe
+        sudo apt install -y cmake
+        cmake CMakeLists.txt
+        make
+        sudo mv urldedupe /bin/
+        cd ..
+    else
+        print_msg green "urldedupe - installed"
+    fi
 }
 
 # Function to install naabu
 install_naabu() {
-    sudo apt-get install -y libpcap-dev
-    go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+    if ! command -v naabu &> /dev/null; then
+        print_msg red "naabu - not installed"
+        print_msg yellow "Attempting to install naabu"
+        sudo apt-get install -y libpcap-dev
+        go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+    else
+        print_msg green "naabu - installed"
+    fi
 }
 
 # Function to install massdns
 install_massdns() {
-    git clone https://github.com/blechschmidt/massdns.git
-    cd massdns
-    make
-    sudo make install
-    cd ..
+    if ! command -v massdns &> /dev/null; then
+        print_msg red "massdns - not installed"
+        print_msg yellow "Attempting to install massdns"
+        git clone https://github.com/blechschmidt/massdns.git
+        cd massdns
+        make
+        sudo make install
+        cd ..
+    else
+        print_msg green "massdns - installed"
+    fi
 }
 
 # Function to install nuclei templates
 install_nuclei_templates() {
-    git clone https://github.com/h0tak88r/nuclei_templates.git
+    if [[ ! -d "nuclei_templates" ]]; then
+        print_msg red "nuclei templates - not installed"
+        print_msg yellow "Attempting to install nuclei templates"
+        git clone https://github.com/h0tak88r/nuclei_templates.git
+        git clone https://github.com/projectdiscovery/nuclei-templates.git
+    else
+        print_msg green "nuclei templates - installed"
+    fi
 }
 
-# Function to install aquatone
-install_aquatone() {
-    wget https://github.com/michenriksen/aquatone/releases/download/v1.7.0/aquatone_linux_amd64_1.7.0.zip
-    unzip aquatone_linux_amd64_1.7.0.zip
-    chmod +x aquatone
-    sudo mv aquatone /usr/local/bin/
+# Function to install Python tools
+install_python_tool() {
+    local tool="$1"
+    local install_cmd="$2"
+    if ! pip show "$tool" &> /dev/null; then
+        print_msg red "$tool - not installed"
+        print_msg yellow "Attempting to install $tool"
+        eval "$install_cmd"
+    else
+        print_msg green "$tool - installed"
+    fi
 }
 
 # Function to check and install required tools
-install_required_tools() {
-    REQUIRED_TOOLS=("subfinder" "httpx" "gau" "subov88r" "nuclei" "naabu" "kxss" "qsreplace" "gf" "dalfox" "ffuf" "interlace" "ghauri")
-    for TOOL in "${REQUIRED_TOOLS[@]}"; do
-        if ! command -v "$TOOL" &> /dev/null; then
-            echo "Error: $TOOL is not installed."
-            echo "To install $TOOL, run the appropriate command:"
-            case "$TOOL" in
-                subfinder) echo "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest" ;;
-                httpx) echo "go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest" ;;
-                gau) echo "go install github.com/lc/gau/v2/cmd/gau@latest" ;;
-                subov88r) echo "go install github.com/h0tak88r/subov88r@latest" ;;
-                nuclei) echo "go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest" ;;
-                naabu) echo "sudo apt install -y libpcap-dev && go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest" ;;
-                kxss) echo "go install -v github.com/tomnomnom/hacks/kxss@latest" ;;
-                qsreplace) echo "go install -v github.com/tomnomnom/qsreplace@latest" ;;
-                gf) echo "go install -v github.com/tomnomnom/gf@latest" ;;
-                dalfox) echo "go install -v github.com/hahwul/dalfox/v2@latest" ;;
-                ffuf) echo "go install -v github.com/ffuf/ffuf@latest" ;;
-                interlace) echo "git clone https://github.com/codingo/Interlace.git && cd Interlace/ && python3 setup.py install" ;;
-                ghauri) echo "git clone https://github.com/r0oth3x49/ghauri.git ; cd ghauri/ ; python3 -m pip install --upgrade -r requirements.txt && python3 setup.py install" ;;
-                *) echo "Please install $TOOL manually." ;;
-            esac
-            exit 1
-        fi
-    done
-}
-
-# Main setup function
-setup() {
-    install_go_tools
+check_and_install_tools() {
+    install_go_tool "subfinder" "go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
+    install_go_tool "httpx" "go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest"
+    install_go_tool "gau" "go install github.com/lc/gau/v2/cmd/gau@latest"
+    install_go_tool "nuclei" "go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
+    install_go_tool "kxss" "go install github.com/Emoe/kxss@latest"
+    install_go_tool "ffuf" "go install github.com/ffuf/ffuf/v2@latest"
+    install_go_tool "subov88r" "go install github.com/h0tak88r/subov88r@latest"
+    install_go_tool "qsreplace" "go install github.com/tomnomnom/qsreplace@latest"
+    install_go_tool "dalfox" "go install github.com/hahwul/dalfox/v2@latest"
     install_urldedupe
     install_naabu
     install_massdns
     install_nuclei_templates
-    install_aquatone
-    install_required_tools
+    install_python_tool "waymore" "pip install waymore"
+    if ! command -v interlace &> /dev/null; then
+        print_msg red "interlace - not installed"
+        print_msg yellow "Attempting to install interlace"
+        git clone https://github.com/codingo/Interlace.git
+        cd Interlace
+        sudo python3 setup.py install
+        cd ..
+    else
+        print_msg green "interlace - installed"
+    fi
+}
+
+# Main setup function
+setup() {
+    check_and_install_tools
 }
 
 # Run the setup
 setup
 
-echo "Setup complete."
+print_msg green "Setup complete."
