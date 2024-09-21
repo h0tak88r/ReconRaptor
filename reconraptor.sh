@@ -16,7 +16,7 @@ FUZZ_WORDLIST="$WORDLIST_DIR/h0tak88r_fuzz.txt"
 TARGET="$1"
 SINGLE_SUBDOMAIN=""
 LOG_FILE="reconraptor.log"
-DISCORD_WEBHOOK="" # Here add your Discord Webhook
+DISCORD_WEBHOOK="" # Here Add your webhook
 
 # Parse options
 while getopts "s:" opt; do
@@ -31,7 +31,10 @@ log() {
     local message="$1"
     printf "%s\n" "$message"
     printf "%s\n" "$message" >> "$LOG_FILE"
-    send_to_discord "$message"
+    
+    if [[ -n "$DISCORD_WEBHOOK" ]]; then
+        send_to_discord "$message"
+    fi
 }
 
 # Function to send messages to Discord
@@ -48,9 +51,13 @@ send_file_to_discord() {
     local file="$1"
     local description="$2"
     if [[ -f "$file" ]]; then
-        curl -F "file=@$file" \
-             -F "payload_json={\"content\": \"$description\"}" \
-             "$DISCORD_WEBHOOK" > /dev/null 2>&1
+        if [[ -n "$DISCORD_WEBHOOK" ]]; then
+            curl -F "file=@$file" \
+                 -F "payload_json={\"content\": \"$description\"}" \
+                 "$DISCORD_WEBHOOK" > /dev/null 2>&1
+        else
+            log "Discord webhook not provided, skipping file upload."
+        fi
     else
         log "Error: File $file does not exist."
     fi
