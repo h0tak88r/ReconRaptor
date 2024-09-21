@@ -16,7 +16,7 @@ FUZZ_WORDLIST="$WORDLIST_DIR/h0tak88r_fuzz.txt"
 TARGET="$1"
 SINGLE_SUBDOMAIN=""
 LOG_FILE="reconraptor.log"
-DISCORD_WEBHOOK="<Here_Add_Your_webhook>"
+DISCORD_WEBHOOK="" # Here add your Discord Webhook
 
 # Parse options
 while getopts "s:" opt; do
