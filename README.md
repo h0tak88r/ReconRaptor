@@ -15,6 +15,8 @@ ReconRaptor is a comprehensive reconnaissance tool designed to perform extensive
 - XSS scanning using Dalfox
 - Fuzzing with ffuf
 - SQL injection scanning with sqlmap
+- Send Results file and logs to your discord server using discord webhook url you can yours  to web webhook at `DISCORD_WEBHOOK="" # Here Add your webhook`
+
 
 ## Installation
 
@@ -80,44 +82,6 @@ Results are saved in the `results` directory, which is recreated for each run.
 
 ## Logging
 All log messages are saved to `reconraptor.log`.
-
-## Modules
-
-### Subdomain Enumeration
-Uses multiple APIs and SubFinder to find subdomains.
-
-### URL Fetching
-Fetches URLs using Waymore.
-
-### Subdomain Takeover Detection
-Detects potential subdomain takeovers.
-
-### JavaScript Exposure Scanning
-Scans for exposed JavaScript files.
-
-### Live Host Filtering
-Filters live hosts using httpx.
-
-### Port Scanning
-Scans top 1000 ports using Naabu.
-
-### Exposed Panel Detection
-Detects exposed panels using nuclei templates.
-
-### Reflection Scanning
-Scans for reflection vulnerabilities using kxss.
-
-### GF Pattern Scanning
-Uses GF patterns to detect vulnerabilities such as XSS, SSRF, SSTI, and more.
-
-### XSS Scanning
-Scans for XSS vulnerabilities using Dalfox.
-
-### Fuzzing
-Performs fuzzing using ffuf.
-
-### SQL Injection Scanning
-Scans for SQL injection vulnerabilities using sqlmap.
 
 ## License
 This project is licensed under the MIT License.
