@@ -110,7 +110,7 @@ check_and_install_tools() {
     install_naabu
     install_massdns
     install_nuclei_templates
-    install_python_tool "waymore" "pip install waymore"
+    install_python_tool "waymore" "sudo pip install waymore"
     if ! command -v interlace &> /dev/null; then
         print_msg red "interlace - not installed"
         print_msg yellow "Attempting to install interlace"
